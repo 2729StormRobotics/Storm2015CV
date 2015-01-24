@@ -18,6 +18,9 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import edu.wpi.first.smartdashboard.properties.IntegerProperty;
+import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
+
 /*
  * @author: Storm 2729
  * 
