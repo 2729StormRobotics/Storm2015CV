@@ -47,7 +47,7 @@ public class StormCV2015{
 		thresh_Lower = new Scalar(120,100,0),
 		thresh_Higher = new Scalar(120,100,80);
 	
-	public static Mat frame, original;
+	public static Mat frame, original, test;
 	public static ArrayList<MatOfPoint> contours = new ArrayList<>();
 	
 	public static void main(String[] args) {
@@ -62,6 +62,7 @@ public class StormCV2015{
 			//reset
 			original.release();
 			frame.release();
+			test.release();
 		}
 	}
 	
@@ -75,13 +76,14 @@ public class StormCV2015{
 		
 		//convert image from RGB to HSV
 		original = Highgui.imread("frame.png");
-		//Imgproc.cvtColor(original, original, Imgproc.COLOR_RGB2HSV);
+		test = original.clone();
+		Imgproc.cvtColor(original, test, Imgproc.COLOR_RGB2HSV);
 		
 		//clone image
-		frame = original.clone();
+		frame = test.clone();
 
 		//apply threshold
-		Core.inRange(original, thresh_Lower, thresh_Higher, frame);
+		Core.inRange(test, thresh_Lower, thresh_Higher, frame);
 		
 		//apply contours
 		Imgproc.findContours(frame, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
