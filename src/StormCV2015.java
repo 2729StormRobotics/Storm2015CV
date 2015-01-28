@@ -38,21 +38,21 @@ import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
  */
 
 public class StormCV2015{
-	
+
 	public static final Scalar
 		Red = new Scalar(0, 0, 255),
 		Blue = new Scalar(255, 0, 0),
 		Green = new Scalar(0, 255, 0),
 		Yellow = new Scalar(0, 255, 255),
-		thresh_Lower = new Scalar(120,100,0),
-		thresh_Higher = new Scalar(120,100,80);
+		thresh_Lower = new Scalar(15,15,0),
+		thresh_Higher = new Scalar(90,75,255);
 	
 	public static Mat frame, original, test;
 	public static ArrayList<MatOfPoint> contours = new ArrayList<>();
 	
 	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		
+		System.out.println();
 		while(true){
 			processImage();
 			processBin();
@@ -63,6 +63,7 @@ public class StormCV2015{
 			original.release();
 			frame.release();
 			test.release();
+			contours.clear();
 		}
 	}
 	
@@ -88,10 +89,10 @@ public class StormCV2015{
 		//apply contours
 		Imgproc.findContours(frame, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 		
-		//remove objects with area less than 20 
+		//remove objects with area less than 20
 		for(Iterator<MatOfPoint> iterator = contours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
-			if(matOfPoint.width() * matOfPoint.height() < 20){
+			if(matOfPoint.width() * matOfPoint.height() < 150){
 				iterator.remove();
 				
 				System.out.println("here");
@@ -100,6 +101,7 @@ public class StormCV2015{
 	}
 	
 	public static void processBin(){
+		/*
 		if(contours.size() == 1){
 			Rect rec1 = Imgproc.boundingRect(contours.get(0));
 			Core.rectangle(original, rec1.tl(), rec1.br(), Green);
@@ -128,7 +130,15 @@ public class StormCV2015{
 			String string = "TargetFound at X:" + (rec1.tl().x + rec1.br().x) / 2 + "Y:" + (rec1.tl().y + rec1.br().y) / 2;
 			Core.putText(original, string, new Point(0,frame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
 			
+			
 			System.out.println("here3");
+		}
+		*/
+		
+		//without selecting best fit rectangle
+		for(int i = 0; i < contours.size(); i++){
+			Rect rec = Imgproc.boundingRect(contours.get(i));
+			Core.rectangle(original, rec.tl(), rec.br(), Green);	
 		}
 		
 		//update image
