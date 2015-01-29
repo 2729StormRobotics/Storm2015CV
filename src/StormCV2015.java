@@ -18,8 +18,9 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import CameraExtensions.WPICameraExtension;
 import edu.wpi.first.smartdashboard.properties.IntegerProperty;
-import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 /*
  * @author: Storm 2729
@@ -37,7 +38,7 @@ import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
  * Height: 30, Width: 68, Depth: 42
  */
 
-public class StormCV2015{
+public class StormCV2015 extends WPICameraExtension{
 	
 	public static final Scalar
 		Red = new Scalar(0, 0, 255),
@@ -47,11 +48,16 @@ public class StormCV2015{
 		thresh_Lower = new Scalar(120,100,0),
 		thresh_Higher = new Scalar(120,100,80);
 	
+	public static NetworkTable table;
 	public static Mat frame, original, test;
 	public static ArrayList<MatOfPoint> contours = new ArrayList<>();
 	
 	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		NetworkTable.setClientMode();
+		//the ip of the smartdashboard is "roborio-####.local" where #### is team number
+		NetworkTable.setIPAddress("roborio-2729.local");
+		table = NetworkTable.getTable("SmartDashboard");
 		
 		while(true){
 			processImage();
