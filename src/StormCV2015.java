@@ -23,6 +23,8 @@ import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.first.smartdashboard.properties.IntegerProperty;
 import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.networktables.NetworkTableSubListenerAdapter;
 
 /*
  * @author: Storm 2729
@@ -38,6 +40,10 @@ import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
  * 
  * Tote
  * Height: 30, Width: 68, Depth: 42
+ * 
+ * Output to SmartDashboard
+ * Whether bin is detected or not
+ * Angle relative to center of camera to bin
  */
 
 public class StormCV2015{
@@ -48,11 +54,11 @@ public class StormCV2015{
 		Green = new Scalar(0, 255, 0),
 		Yellow = new Scalar(0, 255, 255),
 		
-		greenThreshLower = new Scalar(40,5,0),
-		greenThreshHigher = new Scalar(55,80,25),
+		greenThreshLower = new Scalar(30,5,20),
+		greenThreshHigher = new Scalar(60,80,70),
 		
-		yellowThreshLower = new Scalar(40,0,0),
-		yellowThreshHigher = new Scalar(100,255,255);
+		yellowThreshLower = new Scalar(10,0,50),
+		yellowThreshHigher = new Scalar(70,255,255);
 	
 	public static Mat greenFrame, yellowFrame, original, clone;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
@@ -60,9 +66,18 @@ public class StormCV2015{
 	static JFrame window = new JFrame();
 	static JLabel outputImage = new JLabel();
 	
+	static boolean binDetected = false, toteDetected = false;
+	static int binAngle = 0, toteAngle = 0, fieldOfView = 47;
+	
+	public static NetworkTable table;
+	
 	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
+		
+		NetworkTable.setClientMode();
+		NetworkTable.setIPAddress("roborio-2729.local");
+		table = NetworkTable.getTable("SmartDashboard");
+				
 		window.setSize(256, 218);
 		window.setLocationRelativeTo(null);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -72,20 +87,22 @@ public class StormCV2015{
 		while(true){
 			processImage();
 			processBin();
-			processTote();
+			//processTote();
 			updateFrame();
 			
 			//reset
 			original.release();
 			greenFrame.release();
-			yellowFrame.release();
+			//yellowFrame.release();
 			clone.release();
 			greenContours.clear();
 			yellowContours.clear();
+			binDetected = false;
 		}
 	}
 	
 	public static void processImage(){
+		//input image from camera
 		try {
 			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File("frame.png"));
 		} catch (Exception e) {
@@ -112,15 +129,41 @@ public class StormCV2015{
 		//remove objects with too small area
 		for(Iterator<MatOfPoint> iterator = greenContours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
+			
 			if(matOfPoint.width() * matOfPoint.height() < 100){
 				iterator.remove();
 			}
 		}
 		
-		//without selecting best fit rectangle
-		for(int i = 0; i < greenContours.size(); i++){
-			Rect rec = Imgproc.boundingRect(greenContours.get(i));
-			Core.rectangle(original, rec.tl(), rec.br(), Green);	
+		//utilize contours if one or more are detected
+		if(greenContours.size()>=1){
+			//pick contours of best fit
+			int bestDifference = 10;
+			MatOfPoint bestfit = null;
+			for(Iterator<MatOfPoint> iterator = greenContours.iterator(); iterator.hasNext();){
+				MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
+				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (46/75)) < bestDifference){
+					bestfit = matOfPoint;
+					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (46/75));
+				}
+			}
+			greenContours.clear();
+			greenContours.add(bestfit);
+			
+			//create rectangle which bounds contours
+			Rect rec1 = Imgproc.boundingRect(greenContours.get(0));
+			Core.rectangle(original, rec1.tl(), rec1.br(), Green);
+			
+			//find horizontal angle from center of camera to bin, place text
+			binAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
+			Core.putText(original, Integer.toString(binAngle), new Point(0,greenFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
+			
+			//activate boolean
+			binDetected = true;
+			
+			//send values to SmartDashboard
+			table.putBoolean("Bin detected", binDetected);
+			table.putNumber("Bin angle", binAngle);
 		}
 	}
 	
@@ -134,59 +177,52 @@ public class StormCV2015{
 		//apply contours
 		Imgproc.findContours(yellowFrame, yellowContours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 		
-		//remove objects with too small
+		//remove objects with too small area
 		for(Iterator<MatOfPoint> iterator = yellowContours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
-			if(matOfPoint.width() * matOfPoint.height() < 150){
+			
+			if(matOfPoint.width() * matOfPoint.height() < 100){
 				iterator.remove();
 			}
 		}
 		
-		//without selecting best fit rectangle
-		for(int i = 0; i < yellowContours.size(); i++){
-			Rect rec = Imgproc.boundingRect(yellowContours.get(i));
-			Core.rectangle(original, rec.tl(), rec.br(), Yellow);
+		//utilize contours if one or more are detected
+		if(yellowContours.size()>=1){
+			//pick contours of best fit
+			int bestDifference = 10;
+			MatOfPoint bestfit = null;
+			for(Iterator<MatOfPoint> iterator = yellowContours.iterator(); iterator.hasNext();){
+				MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
+				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (68/30)) < bestDifference){
+					bestfit = matOfPoint;
+					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (68/30));
+				}
+			}
+			yellowContours.clear();
+			yellowContours.add(bestfit);
+			
+			//create rectangle which bounds contours
+			Rect rec1 = Imgproc.boundingRect(yellowContours.get(0));
+			Core.rectangle(original, rec1.tl(), rec1.br(), Yellow);
+			
+			//find horizontal angle from center of camera to tote, place text
+			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
+			Core.putText(original, Integer.toString(toteAngle), new Point(0,yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
+			
+			//activate boolean
+			toteDetected = true;
+			
+			//send values to SmartDashboard
+			table.putBoolean("Tote detected", toteDetected);
+			table.putNumber("Tote angle", toteAngle);
 		}
 	}
 	
 	public static void updateFrame(){
-		/*
-		if(contours.size() == 1){
-			Rect rec1 = Imgproc.boundingRect(contours.get(0));
-			Core.rectangle(original, rec1.tl(), rec1.br(), Green);
-			String string = "TargetFound at X:" + (rec1.tl().x + rec1.br().x) / 2 + "Y:" + (rec1.tl().y + rec1.br().y) / 2;
-			Core.putText(original, string, new Point(0,frame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
-						
-			System.out.println("here2");
-		} else if(contours.size() > 1){
-			int bestDifference = 10;
-			MatOfPoint bestfit = null;
-			
-			for(Iterator<MatOfPoint> iterator = contours.iterator(); iterator.hasNext();){
-				MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
-
-				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (75/46)) < bestDifference){
-					bestfit = matOfPoint;
-					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (75/46));
-				}
-			}
-			
-			contours.clear();
-			contours.add(bestfit);
-			
-			Rect rec1 = Imgproc.boundingRect(contours.get(0));
-			Core.rectangle(original, rec1.tl(), rec1.br(), Green);
-			String string = "TargetFound at X:" + (rec1.tl().x + rec1.br().x) / 2 + "Y:" + (rec1.tl().y + rec1.br().y) / 2;
-			Core.putText(original, string, new Point(0,frame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
-			
-			
-			System.out.println("here3");
-		}
-		*/
-		
 		//update image
 		String filename = "frame2.png";
-		Highgui.imwrite(filename, original);  // write to disk
+		//write to disk
+		Highgui.imwrite(filename, original);
 		try {
 			outputImage.setIcon(new ImageIcon(ImageIO.read(new File(filename))));
 		} catch (IOException e) {
