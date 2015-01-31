@@ -21,6 +21,10 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import dashfx.lib.controls.Category;
+import dashfx.lib.controls.DashFXProperties;
+import dashfx.lib.controls.Designable;
+import dashfx.lib.controls.GroupType;
 import CameraExtensions.WPICameraExtension;
 import edu.wpi.first.smartdashboard.properties.IntegerProperty;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
@@ -40,7 +44,10 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * Tote
  * Height: 30, Width: 68, Depth: 42
  */
-
+@Category("Vision")
+@Designable(value = "Storm CV", description = "2015 Vision System")
+@GroupType("CV")
+@DashFXProperties("Sealed: true, Save Children: false")
 public class StormCV2015 extends WPICameraExtension{
 
 	public static final Scalar

@@ -3,8 +3,6 @@ package CameraExtensions;
 import com.googlecode.javacv.FFmpegFrameGrabber;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 import static com.googlecode.javacv.cpp.opencv_core.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A class used to gather images from the robot's camera.

@@ -1,0 +1,9 @@
+API: 0.1
+Name: Storm CV
+Description: Contains our 2015 Computer Vision System
+Version: 1.0.0
+# Please generate your own unique UUID and replace it below
+Plugin ID: 321f9d37-9e58-46b6-9ad7-d4e6c04d7de4
+Controls:
+-
+  Class: StormCV2015

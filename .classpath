@@ -5,6 +5,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/javacpp"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/javacv"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SFX"/>
 	<classpathentry kind="lib" path="C:/Program Files/SmartDashboard/SmartDashboard.jar" sourcepath="C:/Users/Tim/Downloads/smart_dashboard/trunk/smartdashboard/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SmartDashboard"/>
 	<classpathentry kind="output" path="bin"/>
