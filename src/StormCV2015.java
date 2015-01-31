@@ -54,8 +54,8 @@ public class StormCV2015{
 		Green = new Scalar(0, 255, 0),
 		Yellow = new Scalar(0, 255, 255),
 		
-		greenThreshLower = new Scalar(30,5,20),
-		greenThreshHigher = new Scalar(60,80,70),
+		greenThreshLower = new Scalar(70,30,10),
+		greenThreshHigher = new Scalar(85,70,50),
 		
 		yellowThreshLower = new Scalar(90, 200, 0),
 		yellowThreshHigher = new Scalar(120, 250, 255);
@@ -86,13 +86,13 @@ public class StormCV2015{
 		
 		while(true){
 			processImage();
-			//processBin();
+			processBin();
 			processTote();
 			updateFrame();
 			
 			//reset
 			original.release();
-			//greenFrame.release();
+			greenFrame.release();
 			yellowFrame.release();
 			clone.release();
 			greenContours.clear();
@@ -207,7 +207,7 @@ public class StormCV2015{
 			
 			//find horizontal angle from center of camera to tote, place text
 			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
-			Core.putText(original, Integer.toString(toteAngle), new Point(0,yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
+			Core.putText(original, Integer.toString(toteAngle), new Point(30,yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
 			
 			//activate boolean
 			toteDetected = true;
