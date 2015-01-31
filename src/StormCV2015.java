@@ -57,8 +57,8 @@ public class StormCV2015{
 		greenThreshLower = new Scalar(30,5,20),
 		greenThreshHigher = new Scalar(60,80,70),
 		
-		yellowThreshLower = new Scalar(10,0,50),
-		yellowThreshHigher = new Scalar(70,255,255);
+		yellowThreshLower = new Scalar(90, 200, 0),
+		yellowThreshHigher = new Scalar(120, 250, 255);
 	
 	public static Mat greenFrame, yellowFrame, original, clone;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
@@ -86,14 +86,14 @@ public class StormCV2015{
 		
 		while(true){
 			processImage();
-			processBin();
-			//processTote();
+			//processBin();
+			processTote();
 			updateFrame();
 			
 			//reset
 			original.release();
-			greenFrame.release();
-			//yellowFrame.release();
+			//greenFrame.release();
+			yellowFrame.release();
 			clone.release();
 			greenContours.clear();
 			yellowContours.clear();
@@ -181,7 +181,7 @@ public class StormCV2015{
 		for(Iterator<MatOfPoint> iterator = yellowContours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
 			
-			if(matOfPoint.width() * matOfPoint.height() < 100){
+			if(matOfPoint.width() * matOfPoint.height() < 50){
 				iterator.remove();
 			}
 		}
