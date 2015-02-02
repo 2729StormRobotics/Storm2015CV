@@ -1,6 +1,3 @@
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -21,10 +18,7 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
-import edu.wpi.first.smartdashboard.properties.IntegerProperty;
-import edu.wpi.first.smartdashboard.xml.SmartDashboardXMLReader;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.networktables.NetworkTableSubListenerAdapter;
 
 /*
  * @author: Storm 2729
@@ -54,8 +48,8 @@ public class StormCV2015{
 		Green = new Scalar(0, 255, 0),
 		Yellow = new Scalar(0, 255, 255),
 		
-		greenThreshLower = new Scalar(70,30,10),
-		greenThreshHigher = new Scalar(85,70,50),
+		greenThreshLower = new Scalar(30,40,0),
+		greenThreshHigher = new Scalar(60,250,255),
 		
 		yellowThreshLower = new Scalar(90, 200, 0),
 		yellowThreshHigher = new Scalar(120, 250, 255);
@@ -72,12 +66,15 @@ public class StormCV2015{
 	public static NetworkTable table;
 	
 	public static void main(String[] args) {
+		//load native library for OpenCV
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
+		//start SmartDashboard
 		NetworkTable.setClientMode();
 		NetworkTable.setIPAddress("roborio-2729.local");
 		table = NetworkTable.getTable("SmartDashboard");
-				
+		
+		//establish settings for debug frame
 		window.setSize(256, 218);
 		window.setLocationRelativeTo(null);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -85,12 +82,16 @@ public class StormCV2015{
 		window.add(outputImage);
 		
 		while(true){
+			//take in and convert image 
 			processImage();
+			//recognize green bin
 			processBin();
+			//recognize yellow tote
 			processTote();
+			//update debug frame
 			updateFrame();
 			
-			//reset
+			//reset variables
 			original.release();
 			greenFrame.release();
 			yellowFrame.release();
