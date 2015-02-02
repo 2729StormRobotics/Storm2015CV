@@ -4,6 +4,16 @@ Description: Contains our 2015 Computer Vision System
 Version: 1.0.0
 # Please generate your own unique UUID and replace it below
 Plugin ID: 321f9d37-9e58-46b6-9ad7-d4e6c04d7de4
+InitScript: StormCVInit
 Controls:
 -
-  Class: StormCV2015
+    Class: stormCV.StormCV2015
+-
+  Name: Vision System
+  Description: Storm 2015 Vision System
+  Source: stormCV.Storm2015CV.java
+  Group Type: CV
+  Save Children: false
+  Category: Vision
+  Sealed: true
+  Placeholders: [Name, Value]

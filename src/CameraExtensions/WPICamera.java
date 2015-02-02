@@ -154,6 +154,11 @@ public class WPICamera extends WPIDisposable {
      * @author Greg Granito
      */
     public static class BadConnectionException extends Exception {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4447039255183263556L;
     }
 
     @Override

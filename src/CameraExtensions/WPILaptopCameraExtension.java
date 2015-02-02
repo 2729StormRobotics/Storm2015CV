@@ -4,14 +4,12 @@
  */
 package CameraExtensions;
 
-import edu.wpi.first.smartdashboard.gui.DashboardFrame;
 import edu.wpi.first.smartdashboard.gui.StaticWidget;
 import edu.wpi.first.smartdashboard.properties.Property;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import javax.swing.SwingUtilities;
 
 /**
  * An extension that gets images from a webcam on the computer.
@@ -19,9 +17,11 @@ import javax.swing.SwingUtilities;
  */
 public class WPILaptopCameraExtension extends StaticWidget {
 
-    public static final String NAME = "Laptop Camera";
-    private boolean connected = false;
-
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8904912450344270421L;
+	public static final String NAME = "Laptop Camera";
     public class GCThread extends Thread {
 
         boolean destroyed = false;

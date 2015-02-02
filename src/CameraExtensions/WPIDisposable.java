@@ -106,7 +106,12 @@ public abstract class WPIDisposable {
      */
     public static class DisposedException extends RuntimeException {
 
-        public DisposedException(String message) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -4041227436153090398L;
+
+		public DisposedException(String message) {
             super(message);
         }
     }

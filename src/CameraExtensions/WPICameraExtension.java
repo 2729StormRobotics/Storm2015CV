@@ -4,7 +4,6 @@
  */
 package CameraExtensions;
 
-import edu.wpi.first.smartdashboard.gui.DashboardFrame;
 import edu.wpi.first.smartdashboard.gui.DashboardPrefs;
 import edu.wpi.first.smartdashboard.gui.StaticWidget;
 import edu.wpi.first.smartdashboard.properties.IPAddressProperty;
@@ -13,7 +12,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import javax.swing.SwingUtilities;
 
 /**
  *
@@ -21,9 +19,11 @@ import javax.swing.SwingUtilities;
  */
 public class WPICameraExtension extends StaticWidget {
 
-    public static final String NAME = "Camera";
-    private boolean connected = false;
-
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7049692675685558720L;
+	public static final String NAME = "Camera";
     public class GCThread extends Thread {
 
         boolean destroyed = false;

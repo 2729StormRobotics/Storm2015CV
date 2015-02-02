@@ -262,7 +262,7 @@ public class WPIBinaryImage extends WPIImage {
 
         CvSeq contours = new CvSeq();
         cvFindContours(tempImage, storage, contours, 256, CV_RETR_LIST, CV_CHAIN_APPROX_TC89_KCOS);
-        ArrayList<WPIContour> results = new ArrayList();
+        ArrayList<WPIContour> results = new ArrayList<WPIContour>();
         while (!isNull(contours)) {
             WPIContour contour = new WPIContour(cvCloneSeq(contours, storage));
             results.add(contour);
