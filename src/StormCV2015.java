@@ -4,6 +4,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -98,7 +102,11 @@ public class StormCV2015{
 			clone.release();
 			greenContours.clear();
 			yellowContours.clear();
-			binDetected = false;
+			Image output = new Image("frame.png");
+			ImageView view = new ImageView(output);
+			HBox box = new HBox();
+			box.getChildren().add(box);
+			
 		}
 	}
 	
@@ -163,9 +171,11 @@ public class StormCV2015{
 			binDetected = true;
 			
 			//send values to SmartDashboard
-			table.putBoolean("Bin detected", binDetected);
 			table.putNumber("Bin angle", binAngle);
+		}else{
+			binDetected = false;
 		}
+		table.putBoolean("Bin detected", binDetected);
 	}
 	
 	public static void processTote(){
