@@ -5,6 +5,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javafx.scene.image.Image;
+import javafx.scene.shape.Ellipse;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -40,16 +43,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * Tote
  * Height: 30, Width: 68, Depth: 42
  */
-@Category("Vision")
-@Designable(value = "Storm CV", description = "2015 Vision System")
-@GroupType("CV")
-@DashFXProperties("Sealed: true, Save Children: false")
-public class StormCV2015 extends WPICameraExtension{
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1042158697568616891L;
+public class StormCV2015{
 
 	public static final Scalar
 		Red = new Scalar(0, 0, 255),
@@ -72,6 +66,7 @@ public class StormCV2015 extends WPICameraExtension{
 	static JLabel outputImage = new JLabel();
 	
 	public static void main(String[] args) {
+		Image image = new Im
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		NetworkTable.setClientMode();
 		//the ip of the smartdashboard is "roborio-####.local" where #### is team number
