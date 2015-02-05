@@ -4,12 +4,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -22,7 +17,12 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import edu.wpi.first.smartdashboard.camera.WPICameraExtension;
+import edu.wpi.first.wpijavacv.StormExtensions;
+import edu.wpi.first.wpijavacv.WPIColorImage;
+import edu.wpi.first.wpijavacv.WPIImage;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import static com.googlecode.javacv.cpp.opencv_core.*;
 
 /*
  * @author: Storm 2729
@@ -44,7 +44,12 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * Angle relative to center of camera to bin
  */
 
-public class StormCV2015{
+public class StormCV2015 extends WPICameraExtension{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public static final Scalar
 		Red = new Scalar(0, 0, 255),
@@ -79,38 +84,14 @@ public class StormCV2015{
 		table = NetworkTable.getTable("SmartDashboard");
 		
 		//establish settings for debug frame
-		window.setSize(256, 218);
-		window.setLocationRelativeTo(null);
-		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		window.setVisible(true);
-		window.add(outputImage);
-		
-		while(true){
-			//take in and convert image 
-			processImage();
-			//recognize green bin
-			processBin();
-			//recognize yellow tote
-			processTote();
-			//update debug frame
-			updateFrame();
-			
-			//reset variables
-			original.release();
-			greenFrame.release();
-			yellowFrame.release();
-			clone.release();
-			greenContours.clear();
-			yellowContours.clear();
-			Image output = new Image("frame.png");
-			ImageView view = new ImageView(output);
-			HBox box = new HBox();
-			box.getChildren().add(box);
-			
-		}
 	}
 	
-	public static void processImage(){
+	public StormCV2015(){
+		
+	}
+	
+	@Override
+	public WPIImage processImage(WPIColorImage rawImage){
 		//input image from camera
 		try {
 			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File("frame.png"));
@@ -123,6 +104,27 @@ public class StormCV2015{
 		original = Highgui.imread("frame.png");
 		clone = original.clone();
 		Imgproc.cvtColor(original, clone, Imgproc.COLOR_RGB2HSV);
+		processBin();
+		//recognize yellow tote
+		processTote();
+		//update debug frame
+		updateFrame();
+		
+		//reset variables
+		original.release();
+		greenFrame.release();
+		yellowFrame.release();
+		clone.release();
+		greenContours.clear();
+		yellowContours.clear();
+		WPIImage output = null;
+		try {
+			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File("frame2.png"))));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return output;
 	}
 	
 	public static void processBin(){
@@ -234,12 +236,6 @@ public class StormCV2015{
 		String filename = "frame2.png";
 		//write to disk
 		Highgui.imwrite(filename, original);
-		try {
-			outputImage.setIcon(new ImageIcon(ImageIO.read(new File(filename))));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 }
