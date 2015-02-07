@@ -164,7 +164,7 @@ public class StormCV2015 extends WPICameraExtension{
 			
 			//find horizontal angle from center of camera to bin, place text
 			binAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
-			Core.putText(original, Integer.toString(binAngle), new Point(0,greenFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
+			Core.putText(original, Integer.toString(binAngle), new Point(0, greenFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
 			
 			//activate boolean
 			binDetected = true;
@@ -218,7 +218,7 @@ public class StormCV2015 extends WPICameraExtension{
 			
 			//find horizontal angle from center of camera to tote, place text
 			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
-			Core.putText(original, Integer.toString(toteAngle), new Point(0,yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
+			Core.putText(original, Integer.toString(toteAngle), new Point(0, yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
 			
 			//activate boolean
 			toteDetected = true;
@@ -228,8 +228,8 @@ public class StormCV2015 extends WPICameraExtension{
 		}
 		
 		//send values to SmartDashboard
-		table.putNumber("tote angle", toteAngle);
-		table.putBoolean("tote detected", toteDetected);
+		table.putNumber("Tote angle", toteAngle);
+		table.putBoolean("Tote detected", toteDetected);
 	}
 	
 	public static void updateFrame(){
