@@ -59,7 +59,6 @@ public class StormExtensions
     }
 
     private static CvMemStorage storage;
-    private static ArrayList<CvSeq> thingsToDispose;
 
     public static void init()
     {
@@ -80,7 +79,7 @@ public class StormExtensions
 
         CvSeq contours = new CvSeq();
         opencv_imgproc.cvFindContours(tempImage, storage, contours, 256, opencv_imgproc.CV_RETR_EXTERNAL, opencv_imgproc.CV_CHAIN_APPROX_TC89_KCOS);
-        ArrayList<WPIContour> results = new ArrayList();
+        ArrayList<WPIContour> results = new ArrayList<WPIContour>();
         while (!WPIDisposable.isNull(contours)) {
             CvSeq convexContour = opencv_imgproc.cvConvexHull2(contours, storage, opencv_imgproc.CV_CLOCKWISE, 1);
             WPIContour contour = new WPIContour(opencv_core.cvCloneSeq(convexContour, storage));

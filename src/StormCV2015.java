@@ -18,6 +18,7 @@ import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.first.smartdashboard.camera.WPICameraExtension;
+import edu.wpi.first.smartdashboard.camera.WPILaptopCameraExtension;
 import edu.wpi.first.wpijavacv.StormExtensions;
 import edu.wpi.first.wpijavacv.WPIColorImage;
 import edu.wpi.first.wpijavacv.WPIImage;
@@ -63,7 +64,7 @@ public class StormCV2015 extends WPICameraExtension{
 		yellowThreshLower = new Scalar(90, 200, 0),
 		yellowThreshHigher = new Scalar(120, 250, 255);
 	
-	public static Mat greenFrame, yellowFrame, original, clone;
+	public static Mat greenFrame, yellowFrame, original, _hsv;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
 	
 	static JFrame window = new JFrame();
@@ -71,6 +72,8 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	static boolean binDetected = false, toteDetected = false;
 	static int binAngle = 0, toteAngle = 0, fieldOfView = 47;
+	
+	public static String _userLoc = System.getenv("USERPROFILE");
 	
 	public static NetworkTable table;
 	
@@ -92,18 +95,25 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	@Override
 	public WPIImage processImage(WPIColorImage rawImage){
+		//System.out.println(System.getProperty("java.library.path"));
+		//load native library for OpenCV
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		
+		//start SmartDashboard
+		table = NetworkTable.getTable("SmartDashboard");
 		//input image from camera
 		try {
-			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File("frame.png"));
+			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File(_userLoc + "/frame.png"));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		//convert image from RGB to HSV
-		original = Highgui.imread("frame.png");
-		clone = original.clone();
-		Imgproc.cvtColor(original, clone, Imgproc.COLOR_RGB2HSV);
+		original = Highgui.imread(_userLoc + "frame.png");
+		_hsv = new Mat();
+		System.out.println("original depth: " + original.depth() + " hsv depth: " + _hsv.depth());
+		
+		Imgproc.cvtColor(original, _hsv, Imgproc.COLOR_RGB2HSV);
 		processBin();
 		//recognize yellow tote
 		processTote();
@@ -114,7 +124,7 @@ public class StormCV2015 extends WPICameraExtension{
 		original.release();
 		greenFrame.release();
 		yellowFrame.release();
-		clone.release();
+		_hsv.release();
 		greenContours.clear();
 		yellowContours.clear();
 		WPIImage output = null;
@@ -129,10 +139,10 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	public static void processBin(){
 		//clone image
-		greenFrame = clone.clone();
+		greenFrame = _hsv.clone();
 
 		//apply threshold
-		Core.inRange(clone, greenThreshLower, greenThreshHigher, greenFrame);
+		Core.inRange(_hsv, greenThreshLower, greenThreshHigher, greenFrame);
 		
 		//apply contours
 		Imgproc.findContours(greenFrame, greenContours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -182,10 +192,10 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	public static void processTote(){
 		//clone image
-		yellowFrame = clone.clone();
+		yellowFrame = _hsv.clone();
 
 		//apply threshold
-		Core.inRange(clone, yellowThreshLower, yellowThreshHigher, yellowFrame);
+		Core.inRange(_hsv, yellowThreshLower, yellowThreshHigher, yellowFrame);
 		
 		//apply contours
 		Imgproc.findContours(yellowFrame, yellowContours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -233,7 +243,7 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	public static void updateFrame(){
 		//update image
-		String filename = "frame2.png";
+		String filename = _userLoc + "/frame2.png";
 		//write to disk
 		Highgui.imwrite(filename, original);
 	}
