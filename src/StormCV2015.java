@@ -41,15 +41,12 @@ import static com.googlecode.javacv.cpp.opencv_core.*;
  * Height: 30, Width: 68, Depth: 42
  * 
  * Output to SmartDashboard
- * Whether bin is detected or not
- * Angle relative to center of camera to bin
+ * Whether bin/tote is detected or not
+ * Angle relative to center of camera to bin/tote
  */
 
 public class StormCV2015 extends WPICameraExtension{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public static final Scalar
@@ -85,8 +82,6 @@ public class StormCV2015 extends WPICameraExtension{
 		NetworkTable.setClientMode();
 		NetworkTable.setIPAddress("roborio-2729.local");
 		table = NetworkTable.getTable("SmartDashboard");
-		
-		//establish settings for debug frame
 	}
 	
 	public StormCV2015(){
@@ -127,6 +122,8 @@ public class StormCV2015 extends WPICameraExtension{
 		_hsv.release();
 		greenContours.clear();
 		yellowContours.clear();
+		
+		//return image
 		WPIImage output = null;
 		try {
 			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File("frame2.png"))));
@@ -177,16 +174,17 @@ public class StormCV2015 extends WPICameraExtension{
 			
 			//find horizontal angle from center of camera to bin, place text
 			binAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
-			Core.putText(original, Integer.toString(binAngle), new Point(0,greenFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
+			Core.putText(original, Integer.toString(binAngle), new Point(0, greenFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Red);
 			
 			//activate boolean
 			binDetected = true;
-			
-			//send values to SmartDashboard
-			table.putNumber("Bin angle", binAngle);
-		}else{
+		} else {
+			//deactivate boolean
 			binDetected = false;
 		}
+		
+		//send values to SmartDashboard
+		table.putNumber("Bin angle", binAngle);
 		table.putBoolean("Bin detected", binDetected);
 	}
 	
@@ -230,15 +228,18 @@ public class StormCV2015 extends WPICameraExtension{
 			
 			//find horizontal angle from center of camera to tote, place text
 			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
-			Core.putText(original, Integer.toString(toteAngle), new Point(30,yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
+			Core.putText(original, Integer.toString(toteAngle), new Point(0, yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
 			
 			//activate boolean
 			toteDetected = true;
-			
-			//send values to SmartDashboard
-			table.putBoolean("Tote detected", toteDetected);
-			table.putNumber("Tote angle", toteAngle);
+		} else {
+			//deactivate boolean
+			toteDetected = false;
 		}
+		
+		//send values to SmartDashboard
+		table.putNumber("Tote angle", toteAngle);
+		table.putBoolean("Tote detected", toteDetected);
 	}
 	
 	public static void updateFrame(){
@@ -247,5 +248,4 @@ public class StormCV2015 extends WPICameraExtension{
 		//write to disk
 		Highgui.imwrite(filename, original);
 	}
-	
 }

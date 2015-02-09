@@ -14,5 +14,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JavaCV"/>
 	<classpathentry kind="lib" path="C:/Program Files/SmartDashboard/SmartDashboard.jar" sourcepath="C:/Users/Tim/Downloads/smart_dashboard/trunk/smartdashboard/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SmartDashboard"/>
+	<classpathentry kind="lib" path="C:/Users/Storm/SmartDashboard/extensions/lib/javacv.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Storm/SmartDashboard/extensions/lib/WPIJavaCV.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Storm/SmartDashboard/extensions/WPICameraExtension.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
