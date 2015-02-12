@@ -19,6 +19,8 @@ import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.first.smartdashboard.camera.WPICameraExtension;
 import edu.wpi.first.smartdashboard.camera.WPILaptopCameraExtension;
+import edu.wpi.first.smartdashboard.properties.DoubleProperty;
+import edu.wpi.first.smartdashboard.properties.IntegerProperty;
 import edu.wpi.first.wpijavacv.StormExtensions;
 import edu.wpi.first.wpijavacv.WPIColorImage;
 import edu.wpi.first.wpijavacv.WPIImage;
@@ -49,17 +51,35 @@ public class StormCV2015 extends WPICameraExtension{
 
 	private static final long serialVersionUID = 1L;
 
-	public static final Scalar
+	private IntegerProperty _hueCLow = new IntegerProperty(this, "Container hue low", 30),
+							_hueCHigh= new IntegerProperty(this, "Container hue high", 60),
+							_satCLow = new IntegerProperty(this, "Container sat low", 40),
+							_satCHigh= new IntegerProperty(this, "Container sat high", 250),
+							_valCLow = new IntegerProperty(this, "Container val low", 0),
+							_valCHigh= new IntegerProperty(this, "Container val high", 255),
+							_hueTLow = new IntegerProperty(this, "Tote hue low", 90),
+							_hueTHigh= new IntegerProperty(this, "Tote hue high", 120),
+							_satTLow = new IntegerProperty(this, "Tote sat low", 200),
+							_satTHigh= new IntegerProperty(this, "Tote sat high", 250),
+							_valTLow = new IntegerProperty(this, "Tote val low", 0),
+							_valTHigh= new IntegerProperty(this, "Tote val high", 250),
+							_aspectRatioC = new IntegerProperty(this, "Container aspect ratio", 46/75),
+							_aspectRatioT = new IntegerProperty(this, "Tote aspect ratio", 68/30);
+	
+	private DoubleProperty  _fieldOfViewV = new DoubleProperty(this, "Vertical field of view", 36.13),
+						 	_fieldOfViewH = new DoubleProperty(this, "Horizontal field of view", 47);
+	
+	public static Scalar
 		Red = new Scalar(0, 0, 255),
 		Blue = new Scalar(255, 0, 0),
 		Green = new Scalar(0, 255, 0),
 		Yellow = new Scalar(0, 255, 255),
 		
-		greenThreshLower = new Scalar(30,40,0),
-		greenThreshHigher = new Scalar(60,250,255),
+		greenThreshLower,
+		greenThreshHigher,
 		
-		yellowThreshLower = new Scalar(90, 200, 0),
-		yellowThreshHigher = new Scalar(120, 250, 255);
+		yellowThreshLower,
+		yellowThreshHigher;
 	
 	public static Mat greenFrame, yellowFrame, original, _hsv;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
@@ -77,7 +97,6 @@ public class StormCV2015 extends WPICameraExtension{
 	public static void main(String[] args) {
 		//load native library for OpenCV
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		
 		//start SmartDashboard
 		NetworkTable.setClientMode();
 		NetworkTable.setIPAddress("roborio-2729.local");
@@ -92,6 +111,12 @@ public class StormCV2015 extends WPICameraExtension{
 	public WPIImage processImage(WPIColorImage rawImage){
 		//System.out.println(System.getProperty("java.library.path"));
 		//load native library for OpenCV
+
+		greenThreshLower   = new Scalar(_hueCLow.getValue(),_satCLow.getValue(),_valCLow.getValue());
+		greenThreshHigher  = new Scalar(_hueCHigh.getValue(),_satCHigh.getValue(),_valCHigh.getValue());
+		yellowThreshLower  = new Scalar(_hueTLow.getValue(),_satTLow.getValue(),_valTLow.getValue());
+		yellowThreshHigher = new Scalar(_hueTHigh.getValue(),_satTHigh.getValue(),_valTHigh.getValue());
+		
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		//start SmartDashboard
@@ -104,9 +129,9 @@ public class StormCV2015 extends WPICameraExtension{
 			e.printStackTrace();
 		}
 		//convert image from RGB to HSV
-		original = Highgui.imread(_userLoc + "frame.png");
+		original = Highgui.imread(_userLoc + "/frame.png");
 		_hsv = new Mat();
-		System.out.println("original depth: " + original.depth() + " hsv depth: " + _hsv.depth());
+		System.out.println("original depth: " + original.depth() + " original Chann: " + original.channels());
 		
 		Imgproc.cvtColor(original, _hsv, Imgproc.COLOR_RGB2HSV);
 		processBin();
@@ -124,9 +149,9 @@ public class StormCV2015 extends WPICameraExtension{
 		yellowContours.clear();
 		
 		//return image
-		WPIImage output = null;
+		WPIImage output = rawImage;
 		try {
-			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File("frame2.png"))));
+			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File(_userLoc + "/frame2.png"))));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -134,7 +159,7 @@ public class StormCV2015 extends WPICameraExtension{
 		return output;
 	}
 	
-	public static void processBin(){
+	public void processBin(){
 		//clone image
 		greenFrame = _hsv.clone();
 
@@ -160,9 +185,9 @@ public class StormCV2015 extends WPICameraExtension{
 			MatOfPoint bestfit = null;
 			for(Iterator<MatOfPoint> iterator = greenContours.iterator(); iterator.hasNext();){
 				MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
-				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (46/75)) < bestDifference){
+				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (_aspectRatioC.getValue())) < bestDifference){
 					bestfit = matOfPoint;
-					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (46/75));
+					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (_aspectRatioC.getValue()));
 				}
 			}
 			greenContours.clear();
@@ -188,7 +213,7 @@ public class StormCV2015 extends WPICameraExtension{
 		table.putBoolean("Bin detected", binDetected);
 	}
 	
-	public static void processTote(){
+	public void processTote(){
 		//clone image
 		yellowFrame = _hsv.clone();
 
@@ -214,9 +239,9 @@ public class StormCV2015 extends WPICameraExtension{
 			MatOfPoint bestfit = null;
 			for(Iterator<MatOfPoint> iterator = yellowContours.iterator(); iterator.hasNext();){
 				MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
-				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (68/30)) < bestDifference){
+				if(Math.abs(matOfPoint.width() / matOfPoint.height() - (_aspectRatioT.getValue())) < bestDifference){
 					bestfit = matOfPoint;
-					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (68/30));
+					bestDifference = Math.abs(matOfPoint.width() / matOfPoint.height() - (_aspectRatioT.getValue()));
 				}
 			}
 			yellowContours.clear();
@@ -227,7 +252,7 @@ public class StormCV2015 extends WPICameraExtension{
 			Core.rectangle(original, rec1.tl(), rec1.br(), Yellow);
 			
 			//find horizontal angle from center of camera to tote, place text
-			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (fieldOfView/2));
+			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (_fieldOfViewH.getValue()/2));
 			Core.putText(original, Integer.toString(toteAngle), new Point(0, yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
 			
 			//activate boolean

@@ -99,7 +99,9 @@ public class StormExtensions
     
     public static void copyImage(WPIImage out,IplImage image) {
         boolean allocateNew = false;
-        if(out.image == null || out.image.depth() != image.depth()) {
+        if(out.image == null || 
+        		out.image.depth() 
+        		!= image.depth()) {
             allocateNew = true;
         } else {
             CvSize outSize = out.image.cvSize(),
