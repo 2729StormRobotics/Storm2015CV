@@ -1,12 +1,13 @@
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -56,7 +57,9 @@ public class StormCV2015 extends WPICameraExtension{
 							_valTLow = new IntegerProperty(this, "Tote val low", 0),
 							_valTHigh= new IntegerProperty(this, "Tote val high", 250),
 							_aspectRatioB = new IntegerProperty(this, "Container aspect ratio", 46/75),
-							_aspectRatioT = new IntegerProperty(this, "Tote aspect ratio", 68/30);
+							_aspectRatioT = new IntegerProperty(this, "Tote aspect ratio", 68/30),
+							_minBArea = new IntegerProperty(this, "Minimum bin area", 100),
+							_minTArea = new IntegerProperty(this, "Minimum tote area", 50);
 	
 	private DoubleProperty  _fieldOfViewV = new DoubleProperty(this, "Vertical field of view", 36.13),
 						 	_fieldOfViewH = new DoubleProperty(this, "Horizontal field of view", 47);
@@ -73,9 +76,6 @@ public class StormCV2015 extends WPICameraExtension{
 	
 	public static Mat greenFrame, yellowFrame, original, _hsv;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
-	
-	static JFrame window = new JFrame();
-	static JLabel outputImage = new JLabel();
 	
 	static boolean binDetected = false, toteDetected = false;
 	static int binAngle = 0, toteAngle = 0;
@@ -94,44 +94,43 @@ public class StormCV2015 extends WPICameraExtension{
 	}
 	
 	public StormCV2015(){
-		
+
 	}
 	
 	@Override
 	public WPIImage processImage(WPIColorImage rawImage){
-		//set properties
-		greenThreshLower   = new Scalar(_hueBLow.getValue(),_satBLow.getValue(),_valBLow.getValue());
-		greenThreshHigher  = new Scalar(_hueBHigh.getValue(),_satBHigh.getValue(),_valBHigh.getValue());
-		yellowThreshLower  = new Scalar(_hueTLow.getValue(),_satTLow.getValue(),_valTLow.getValue());
-		yellowThreshHigher = new Scalar(_hueTHigh.getValue(),_satTHigh.getValue(),_valTHigh.getValue());
-		
 		//load native library for OpenCV
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		//start SmartDashboard
 		table = NetworkTable.getTable("SmartDashboard");
 		
+		//set properties
+		greenThreshLower   = new Scalar(_hueBLow.getValue(),_satBLow.getValue(),_valBLow.getValue());
+		greenThreshHigher  = new Scalar(_hueBHigh.getValue(),_satBHigh.getValue(),_valBHigh.getValue());
+		yellowThreshLower  = new Scalar(_hueTLow.getValue(),_satTLow.getValue(),_valTLow.getValue());
+		yellowThreshHigher = new Scalar(_hueTHigh.getValue(),_satTHigh.getValue(),_valTHigh.getValue());
+		
 		//input image from camera
 		try {
-			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File(_userLoc + "/frame.png"));
+			ImageIO.write(ImageIO.read((new URL("http://10.27.29.11/axis-cgi/jpg/image.cgi")).openConnection().getInputStream()), "png", new File(_userLoc + "/input.png"));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		//convert image from RGB to HSV
-		original = Highgui.imread(_userLoc + "/frame.png");
+		original = Highgui.imread(_userLoc + "/input.png");
 		_hsv = new Mat();
 		System.out.println("original depth: " + original.depth() + " original Chann: " + original.channels());
-		
 		Imgproc.cvtColor(original, _hsv, Imgproc.COLOR_RGB2HSV);
 		
-		//recognize green bin
+		//recognize green bin and yellow tote
 		processBin();
-		//recognize yellow tote
 		processTote();
-		//update image file
-		updateImage();
+		
+		//update output image
+		Highgui.imwrite(_userLoc + "/output.png", original);
 		
 		//reset variables
 		original.release();
@@ -144,8 +143,16 @@ public class StormCV2015 extends WPICameraExtension{
 		//return image
 		WPIImage output = rawImage;
 		try {
-			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File(_userLoc + "/frame2.png"))));
+			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File(_userLoc + "/output.png"))));
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//save capture
+		try {
+			ImageIO.write(output.getBufferedImage(), "png", new File(_userLoc + "/Capture " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss").format(new Date()) + ".png"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -162,11 +169,11 @@ public class StormCV2015 extends WPICameraExtension{
 		//apply contours
 		Imgproc.findContours(greenFrame, greenContours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 		
-		//remove objects with too small area
+		//remove contours with too small area
 		for(Iterator<MatOfPoint> iterator = greenContours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
 			
-			if(matOfPoint.width() * matOfPoint.height() < 100){
+			if(matOfPoint.width() * matOfPoint.height() < _minBArea.getValue()){
 				iterator.remove();
 			}
 		}
@@ -220,7 +227,7 @@ public class StormCV2015 extends WPICameraExtension{
 		for(Iterator<MatOfPoint> iterator = yellowContours.iterator(); iterator.hasNext();){
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
 			
-			if(matOfPoint.width() * matOfPoint.height() < 50){
+			if(matOfPoint.width() * matOfPoint.height() < _minTArea.getValue()){
 				iterator.remove();
 			}
 		}
@@ -258,12 +265,5 @@ public class StormCV2015 extends WPICameraExtension{
 		//send values to SmartDashboard
 		table.putNumber("Tote angle", toteAngle);
 		table.putBoolean("Tote detected", toteDetected);
-	}
-	
-	public static void updateImage(){
-		//update image
-		String filename = _userLoc + "/frame2.png";
-		//write to disk
-		Highgui.imwrite(filename, original);
 	}
 }
