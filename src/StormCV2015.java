@@ -1,4 +1,3 @@
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -6,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
@@ -18,6 +18,8 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import com.googlecode.javacv.CanvasFrame;
+import com.googlecode.javacv.cpp.opencv_core;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 import edu.wpi.first.smartdashboard.camera.WPICameraExtension;
@@ -40,7 +42,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * 	Angle relative to center of camera to bin/tote
  */
 
-public class StormCV2015 extends WPICameraExtension{
+public class StormCV2015 extends WPICameraExtension {
 
 	private static final long serialVersionUID = 1L;
 
@@ -65,14 +67,8 @@ public class StormCV2015 extends WPICameraExtension{
 						 	_fieldOfViewH = new DoubleProperty(this, "Horizontal field of view", 47);
 	
 	public static Scalar
-		Red = new Scalar(0, 0, 255),
-		Blue = new Scalar(255, 0, 0),
-		Green = new Scalar(0, 255, 0),
-		Yellow = new Scalar(0, 255, 255),
-		greenThreshLower,
-		greenThreshHigher,
-		yellowThreshLower,
-		yellowThreshHigher;
+		Red = new Scalar(0, 0, 255), Blue = new Scalar(255, 0, 0), Green = new Scalar(0, 255, 0), Yellow = new Scalar(0, 255, 255),
+		greenThreshLower, greenThreshHigher, yellowThreshLower,	yellowThreshHigher;
 	
 	public static Mat greenFrame, yellowFrame, original, _hsv;
 	public static ArrayList<MatOfPoint> greenContours = new ArrayList<>(), yellowContours = new ArrayList<>();
@@ -81,6 +77,8 @@ public class StormCV2015 extends WPICameraExtension{
 	static int binAngle = 0, toteAngle = 0;
 	
 	public static String _userLoc = System.getenv("USERPROFILE");
+	
+	private static WPIImage result;
 	
 	public static NetworkTable table;
 	
@@ -91,14 +89,58 @@ public class StormCV2015 extends WPICameraExtension{
 		NetworkTable.setClientMode();
 		NetworkTable.setIPAddress("roborio-2729.local");
 		table = NetworkTable.getTable("SmartDashboard");
+		
+        /**
+         * This allows the CV system to be run from the command line, and not through SmartDashboard
+         */
+        
+        StormCV2015 cv = new StormCV2015();
+       
+        @SuppressWarnings("resource")
+		Scanner scanner = new Scanner(System.in);
+        if(args.length == 0){
+            System.out.println("Put in filenames seperated by spaces");
+            System.exit(0);
+        }
+        for (String filename : args) {
+            System.out.println(filename + ": ");
+               
+            WPIColorImage rawImage;
+               
+            try {
+                rawImage = new WPIColorImage(ImageIO.read(new File(filename)));
+            } catch (IOException e) {
+                System.err.println("Could not find file!");
+                return;
+            }
+               
+            result = cv.processImage(rawImage);
+            
+            cv.displayImage("Result: " + filename, StormExtensions.getIplImage(result));
+            
+            System.out.println("Enter continues");
+               
+            scanner.nextLine();
+        }
 	}
 	
-	public StormCV2015(){
+    public void displayImage(String title, IplImage image) {
+        /**
+         * This is used to actually display the image when it's run from the command line
+         */
+         IplImage newImage = IplImage.create(image.cvSize(), image.depth(), image.nChannels());
+         opencv_core.cvCopy(image, newImage);
+         CanvasFrame resultFrame = new CanvasFrame(title);
+         resultFrame.showImage(newImage.getBufferedImage());
+         newImage.deallocate();
+    }
+	
+	public StormCV2015() {
 
 	}
 	
 	@Override
-	public WPIImage processImage(WPIColorImage rawImage){
+	public WPIImage processImage(WPIColorImage rawImage) {
 		//load native library for OpenCV
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
@@ -140,26 +182,19 @@ public class StormCV2015 extends WPICameraExtension{
 		greenContours.clear();
 		yellowContours.clear();
 		
-		//return image
+		//return image and save capture
 		WPIImage output = rawImage;
 		try {
+			ImageIO.write(output.getBufferedImage(), "png", new File(_userLoc + "/Capture " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss").format(new Date()) + ".png"));
 			StormExtensions.copyImage(output, IplImage.createFrom(ImageIO.read(new File(_userLoc + "/output.png"))));
 		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		//save capture
-		try {
-			ImageIO.write(output.getBufferedImage(), "png", new File(_userLoc + "/Capture " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss").format(new Date()) + ".png"));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		return output;
 	}
 	
-	public void processBin(){
+	public void processBin() {
 		//clone image
 		greenFrame = _hsv.clone();
 
@@ -213,7 +248,7 @@ public class StormCV2015 extends WPICameraExtension{
 		table.putBoolean("Bin detected", binDetected);
 	}
 	
-	public void processTote(){
+	public void processTote() {
 		//clone image
 		yellowFrame = _hsv.clone();
 
@@ -253,7 +288,7 @@ public class StormCV2015 extends WPICameraExtension{
 			
 			//find horizontal angle from center of camera to tote, place text
 			toteAngle = (int) (((((2 * rec1.tl().x + rec1.width)) / original.width()) - 1) * (_fieldOfViewH.getValue()/2));
-			Core.putText(original, Integer.toString(toteAngle), new Point(0, yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
+			Core.putText(original, Integer.toString(toteAngle), new Point(20, yellowFrame.size().height-10), Core.FONT_HERSHEY_PLAIN, 1, Blue);
 			
 			//activate boolean
 			toteDetected = true;
