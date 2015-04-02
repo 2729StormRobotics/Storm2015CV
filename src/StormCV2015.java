@@ -139,6 +139,9 @@ public class StormCV2015 extends WPICameraExtension {
 
 	}
 	
+	/**
+	 * Takes in image, marks and returns state and angle of green containers and yellow totes
+	 */
 	@Override
 	public WPIImage processImage(WPIColorImage rawImage) {
 		//load native library for OpenCV
@@ -194,6 +197,9 @@ public class StormCV2015 extends WPICameraExtension {
 		return output;
 	}
 	
+	/**
+	 * Detects, marks, and returns state and angle of green containers/bins
+	 */
 	public void processBin() {
 		//clone image
 		greenFrame = _hsv.clone();
@@ -248,6 +254,9 @@ public class StormCV2015 extends WPICameraExtension {
 		table.putBoolean("Bin detected", binDetected);
 	}
 	
+	/**
+	 * Detects, marks, and returns angle of yellow totes
+	 */
 	public void processTote() {
 		//clone image
 		yellowFrame = _hsv.clone();
